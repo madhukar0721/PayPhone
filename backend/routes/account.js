@@ -55,7 +55,7 @@ router.post("/transferFunds", authMiddleware, async (req, res) => {
 
     if (!recepientAccount) {
       await session.abortTransaction();
-      return res.status(404).json({ error: "Wrong Recipient Id" });
+      return res.status(404).json({ error: "Invalid Account" });
     }
 
     await senderAccount
