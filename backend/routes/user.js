@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 require("dotenv").config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const { User } = require("../db");
+const { User ,Account } = require("../db/db");
 const { authMiddleware, adminMiddleware } = require("../middleware");
 
 const router = express.Router();
@@ -55,6 +55,12 @@ router.post("/signup", async (req, res) => {
     });
 
     const newUserId = newUser._id;
+
+    // Create a new Account
+    await Account.create({
+      userId:newUserId,
+      balance:10000,
+    });
 
     const token = jwt.sign(
       {
@@ -257,8 +263,6 @@ router.post("/logout", authMiddleware, async (req, res) => {
     });
   }
 });
-
-
 
 const forgotPasswordSchema = z.object({
   email: {

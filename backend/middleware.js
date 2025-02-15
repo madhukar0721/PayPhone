@@ -43,10 +43,15 @@ const adminMiddleware = (req, res, next) => {
     try {
       const decoded = jwt.verify(userToken, JWT_SECRET);
       console.log(decoded)
-      if (decoded.userId) {
+      if (decoded.isAdmin) {
         req.userId = decoded.userId;
         next();
       }
+
+      return res.status(401).json({
+        error:"Unauthorized access"
+      })
+
     } catch (e) {
       return res.status(401).json({
         error: "Token Expired",
