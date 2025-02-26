@@ -41,6 +41,9 @@ const RegisterForm = () => {
 
       if (!result.success) {
         setValidationError(true);
+        setTimeout(() => {
+          setValidationError(false);
+        }, 3000);
         console.log("Validation error", result.error);
         return;
       }
@@ -51,7 +54,9 @@ const RegisterForm = () => {
         localStorage.setItem("Authorization", response.data.token);
         console.log("Token set in local storage", response.data.token);
         reset();
-        router.push("/dashboard");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 500);
       } else {
         console.log("Erorr in page.tsx", response.error);
       }
