@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { Loader2, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers } from "@/hooks/users";
 
 
 

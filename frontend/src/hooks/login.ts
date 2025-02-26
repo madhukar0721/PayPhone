@@ -1,16 +1,15 @@
 
 
+
 import { useState } from "react";
 import axios from "axios";
 
-interface RegisterInputData {
+interface LoginInputData {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
 }
 
-interface RegisterResponse {
+interface LoginResponse {
   success: boolean;
   error?: string;
   message?: string;
@@ -19,14 +18,14 @@ interface RegisterResponse {
   };
 }
 
-export const useRegister = () => {
+export const useLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean | null>(null);
 
-   const registerUser = async (
-    data: RegisterInputData
-  ): Promise<RegisterResponse> => {
+  const loginUser = async (
+    data: LoginInputData
+  ): Promise<LoginResponse> => {
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -34,7 +33,7 @@ export const useRegister = () => {
     try {
       console.log("hook data", data);
       const axiosResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/user/signup`,
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/user/signin`,
         data
       );
 
@@ -56,7 +55,7 @@ export const useRegister = () => {
   };
 
   return {
-    registerUser,
+    loginUser,
     loading,
     error,
     success,
