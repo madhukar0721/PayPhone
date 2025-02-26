@@ -13,15 +13,21 @@ router.get("/balance", authMiddleware, async (req, res) => {
     });
 
     return res.status(200).json({
+      success:true,
       message: "Balance fetched Successfully",
-      balance: account.balance,
+      data:{
+        userId: account.userId,
+        balance: account.balance,
+
+      }
     });
   } catch (error) {
-    console.error("Internal Server Error:", error);
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
+    console.error("Internal Server Error:", error);  
   }
+  return res.status(500).json({
+    success: false,
+    error: "Internal Server Error",
+  });
 });
 
 // from userId1 -> usr2

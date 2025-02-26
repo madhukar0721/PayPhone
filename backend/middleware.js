@@ -19,6 +19,7 @@ const authMiddleware = (req, res, next) => {
         next();
       }
     } catch (e) {
+console.error("Internal Server Error:", e.adminMiddleware);
       return res.status(401).json({
         error: "Token Expired",
       });

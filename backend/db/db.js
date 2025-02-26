@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true,
+    lowercase: true, 
   },
 
   password: {
@@ -37,10 +37,6 @@ const userSchema = new mongoose.Schema({
   token: {
     type: String,
     default: "",
-  },
-  isAdmin: {
-    type: Boolean,
-    default: false,
   },
   createdAt: {
     type: Date,

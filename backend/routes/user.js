@@ -13,7 +13,7 @@ const router = express.Router();
 
 // SignUp Schema to validate schema for signup data
 const signUpSchema = z.object({
-  email: z.string(),
+  email: z.string().email(),
   password: z.string(),
   firstName: z.string(),
   lastName: z.string(),
@@ -30,6 +30,7 @@ router.post("/signup", async (req, res) => {
 
     if (!success) {
       return res.status(400).json({
+        success: false,
         error: "Wrong SignUp Schema",
       });
     }
@@ -40,6 +41,7 @@ router.post("/signup", async (req, res) => {
 
     if (existingUser) {
       return res.status(409).json({
+        success: false,
         error: "Email already taken",
       });
     }
@@ -64,23 +66,27 @@ router.post("/signup", async (req, res) => {
 
     const token = jwt.sign(
       {
-        newUserId,
+        userId:newUserId,
         isAdmin,
       },
       JWT_SECRET,
-      { expiresIn: "1m" } // setting expiry for jwt token
+      { expiresIn: "10m" } // setting expiry for jwt token
     );
 
     newUser.token = token;
     await newUser.save();
 
     return res.status(200).json({
+      success: true,
       message: "User Created Succesfully",
-      token: token,
+      data:{
+        token:token,
+      }
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({
+      success: false,
       error: "Internal Server Error",
     });
   }
@@ -88,7 +94,7 @@ router.post("/signup", async (req, res) => {
 
 // SignUp Schema to validate schema for signin data
 const signInSchema = z.object({
-  email: z.string(),
+  email: z.string().email(),
   password: z.string(),
 });
 
@@ -111,6 +117,7 @@ router.post("/signin", async (req, res) => {
 
     if (!user) {
       return res.status(401).json({
+        success: false,
         error: "Wrong Credentials || Check Email or password and try again",
       });
     }
@@ -121,6 +128,7 @@ router.post("/signin", async (req, res) => {
 
     if (!comparePassword) {
       return res.status(401).json({
+        success: false,
         error: "Wrong Credentials || Check Email or password and try again",
       });
     }
@@ -131,6 +139,7 @@ router.post("/signin", async (req, res) => {
       const decoded = jwt.verify(lastToken, JWT_SECRET);
       if (decoded.userId) {
         return res.status(403).json({
+          success: false,
           error:
             "Multiple logins are not allowed. You are already logged in on another device.",
         });
@@ -152,12 +161,17 @@ router.post("/signin", async (req, res) => {
     await user.save();
 
     return res.status(200).json({
+      success: true,
       message: "Login Successfull",
-      token: newToken,
+      data:{
+        token : newToken, 
+      }
+
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({
+      success: false,
       error: "Internal Server Error",
     });
   }
@@ -177,6 +191,7 @@ router.put("/updateUserCredentials", authMiddleware, async (req, res) => {
 
     if (!success) {
       return res.status(400).json({
+        success: false,
         error: "Wrong User Credentials Schema",
       });
     }
@@ -184,20 +199,23 @@ router.put("/updateUserCredentials", authMiddleware, async (req, res) => {
     await User.updateOne({ _id: req.userId }, req.body);
 
     return res.status(200).json({
+      success: true,
       message: "User Updated Successfully",
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({
+      success: false,
       error: "Internal Server Error",
     });
   }
 });
 // Bulk Endpoint to reterive all Users Data
-router.get("/bulk", adminMiddleware, async (req, res) => {
+router.get("/bulk", authMiddleware, async (req, res) => {
   try {
     const filter = req.query.filter || "";
     console.log(filter);
+
 
     const users = await User.find({
       $or: [
@@ -216,6 +234,7 @@ router.get("/bulk", adminMiddleware, async (req, res) => {
 
     if (!users) {
       return res.status(204).json({
+        success: false,
         message: "No Users Found",
       });
     }
@@ -223,6 +242,7 @@ router.get("/bulk", adminMiddleware, async (req, res) => {
     console.log(users);
 
     return res.status(200).json({
+      success: true,
       message: "Users found",
       data: users.map((user) => ({
         isAdmin: user.isAdmin,
@@ -235,30 +255,69 @@ router.get("/bulk", adminMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({
+      success: false,
       error: "Internal Server Error",
     });
   }
 });
 
+router.get('/me',authMiddleware,async(req,res)=>{
+
+  try {
+    const user = await User
+    .findOne({
+      _id: req.userId,
+    })
+    .maxTimeMS(5000);
+
+    if (!user) {
+      return res.status(404).json({success: false,  error: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        _id: user._id,
+      },
+    });
+  }
+  catch (error) {
+    console.error("Internal Server Error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+
+
+
+}); // get user details
+
 // Logout Endpoint
-router.post("/logout", authMiddleware, async (req, res) => {
+router.delete("/logout", async (req, res) => {
   try {
     const user = await User.findOne({
       _id: req.userId,
     }).maxTimeMS(5000);
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      
+      return res.status(404).json({success: false,  error: "User not found" });
     }
 
     user.token = "";
     await user.save();
     return res.status(200).json({
+      success: true,
       message: "User Logout Successfully",
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({
+      success: false,
       error: "Internal Server Error",
     });
   }
@@ -278,6 +337,7 @@ router.post("/forgotPassword", async (req, res) => {
 
     if (!success) {
       return res.status(400).json({
+        success: false,
         error: "Wrong Forgot password Schema",
       });
     }
@@ -285,11 +345,13 @@ router.post("/forgotPassword", async (req, res) => {
     // Function to send email to user email for OTP
 
     return res.status(200).json({
+      success: true,
       messgae: "OTP sent to your email",
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
     return res.status(500).json({
+      success: false,
       error: "Internal Server Error",
     });
   }
